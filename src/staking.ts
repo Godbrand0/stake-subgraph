@@ -1,30 +1,28 @@
+import { BigInt,Bytes } from "@graphprotocol/graph-ts"
 import {
   EmergencyWithdrawn as EmergencyWithdrawnEvent,
-  OwnershipTransferred as OwnershipTransferredEvent,
-  Paused as PausedEvent,
+  
   RewardRateUpdated as RewardRateUpdatedEvent,
   RewardsClaimed as RewardsClaimedEvent,
   Staked as StakedEvent,
-  StakingInitialized as StakingInitializedEvent,
-  StakingPaused as StakingPausedEvent,
-  StakingUnpaused as StakingUnpausedEvent,
+
   TokenRecovered as TokenRecoveredEvent,
-  Unpaused as UnpausedEvent,
+ 
   Withdrawn as WithdrawnEvent
 } from "../generated/Staking/Staking"
 import {
   EmergencyWithdrawn,
-  OwnershipTransferred,
-  Paused,
+ 
   RewardRateUpdated,
   RewardsClaimed,
   Staked,
-  StakingInitialized,
-  StakingPaused,
-  StakingUnpaused,
-  TokenRecovered,
-  Unpaused,
-  Withdrawn
+  TotalEmergencyWithdrawn,
+  TotalUsers,
+  Totalstaked,
+  TotalRewardClaimed,
+  Withdrawn,
+ UserCreated,
+ TotalWithdrawn
 } from "../generated/schema"
 
 export function handleEmergencyWithdrawn(event: EmergencyWithdrawnEvent): void {
@@ -40,38 +38,21 @@ export function handleEmergencyWithdrawn(event: EmergencyWithdrawnEvent): void {
   entity.blockNumber = event.block.number
   entity.blockTimestamp = event.block.timestamp
   entity.transactionHash = event.transaction.hash
-
+  
   entity.save()
+  handleTotalEmergencyWithdrawn(event.params.amount)
+}
+export function handleTotalEmergencyWithdrawn(amount: BigInt): void {
+  let stats = TotalEmergencyWithdrawn.load("1")
+  if (stats == null) {
+    stats = new TotalEmergencyWithdrawn("1")
+    stats.totalWithdrawn=BigInt.fromI32(0)
+  }
+  stats.totalWithdrawn=stats.totalWithdrawn.plus(amount)
+  stats.save()
 }
 
-export function handleOwnershipTransferred(
-  event: OwnershipTransferredEvent
-): void {
-  let entity = new OwnershipTransferred(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.previousOwner = event.params.previousOwner
-  entity.newOwner = event.params.newOwner
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handlePaused(event: PausedEvent): void {
-  let entity = new Paused(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.account = event.params.account
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
 
 export function handleRewardRateUpdated(event: RewardRateUpdatedEvent): void {
   let entity = new RewardRateUpdated(
@@ -104,6 +85,17 @@ export function handleRewardsClaimed(event: RewardsClaimedEvent): void {
   entity.transactionHash = event.transaction.hash
 
   entity.save()
+  handleTotalRewardsClaimed(event.params.amount)
+}
+
+export function handleTotalRewardsClaimed(amount: BigInt): void {
+  let stats = TotalRewardClaimed.load("1")
+  if (stats == null) {
+    stats = new TotalRewardClaimed("1")
+    stats.totalClaimed=BigInt.fromI32(0)
+  }
+  stats.totalClaimed=stats.totalClaimed.plus(amount)
+  stats.save()
 }
 
 export function handleStaked(event: StakedEvent): void {
@@ -120,77 +112,55 @@ export function handleStaked(event: StakedEvent): void {
   entity.blockTimestamp = event.block.timestamp
   entity.transactionHash = event.transaction.hash
 
-  entity.save()
-}
-
-export function handleStakingInitialized(event: StakingInitializedEvent): void {
-  let entity = new StakingInitialized(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.stakingToken = event.params.stakingToken
-  entity.initialRewardRate = event.params.initialRewardRate
-  entity.timestamp = event.params.timestamp
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  
 
   entity.save()
+
+  handleUserCreated(event.params.user, event.params.timestamp)
+
+  handleTotalStaked(event.params.amount)
 }
 
-export function handleStakingPaused(event: StakingPausedEvent): void {
-  let entity = new StakingPaused(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.timestamp = event.params.timestamp
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
+export function handleUserCreated (userAddress: Bytes, timestamp: BigInt): void {
+  
+  let userID = userAddress.toHexString()
+  let user = UserCreated.load(userID)
+  if (user == null) {
+    user = new UserCreated(userID)
+    user.createdTimestamp = timestamp
+    user.save()
+    handleTotalUsers()
+  }
+  
+  
 }
 
-export function handleStakingUnpaused(event: StakingUnpausedEvent): void {
-  let entity = new StakingUnpaused(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.timestamp = event.params.timestamp
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
+export function handleTotalUsers (): void {
+  
+  let stats = TotalUsers.load("1")
+  if (stats == null) {
+    stats = new TotalUsers("1")
+    stats.totalUsers=BigInt.fromI32(0)
+  }
+  stats.totalUsers=stats.totalUsers.plus(BigInt.fromI32(1))
+  stats.save()
 }
 
-export function handleTokenRecovered(event: TokenRecoveredEvent): void {
-  let entity = new TokenRecovered(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.token = event.params.token
-  entity.amount = event.params.amount
-  entity.timestamp = event.params.timestamp
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
+export function handleTotalStaked(amount: BigInt): void {
+let stats = Totalstaked.load("1")
+if (stats == null) {
+  stats = new Totalstaked("1")
+  stats.totalStaked=BigInt.fromI32(0)
+} 
+stats.totalStaked=stats.totalStaked.plus(amount)
+stats.save()
 }
 
-export function handleUnpaused(event: UnpausedEvent): void {
-  let entity = new Unpaused(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.account = event.params.account
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
 
-  entity.save()
-}
+
+
+
 
 export function handleWithdrawn(event: WithdrawnEvent): void {
   let entity = new Withdrawn(
@@ -208,4 +178,26 @@ export function handleWithdrawn(event: WithdrawnEvent): void {
   entity.transactionHash = event.transaction.hash
 
   entity.save()
+  handleTotalWithdrawn(event.params.amount)
 }
+
+export function handleTotalWithdrawn(amount: BigInt): void {
+  let stats = TotalWithdrawn.load("1")
+  if (stats == null) {
+    stats = new TotalWithdrawn("1")
+    stats.totalWithdrawn=BigInt.fromI32(0)
+  }
+  stats.totalWithdrawn=stats.totalWithdrawn.plus(amount)
+  stats.save()
+}
+
+
+
+
+
+// whats working
+// rewardsclaimeds
+// userCreateds
+// totalStakeds
+// totalRewardClaimed
+// stakeds
