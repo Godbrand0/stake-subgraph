@@ -17,16 +17,16 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - EmergencyWithdrawn
-        - TotalEmergencyWithdrawn
         - RewardRateUpdated
         - RewardsClaimed
-        - Staked         
+        - Staked
         - Withdrawn
-        - TokenStats
-        - UserBalance
-        - Totalstaked
-        - TotalWithdrawn
+        - UserCreated
         - TotalUsers
+        - Totalstaked
+        - TotalRewardClaimed
+        - TotalWithdrawn
+        - TotalEmergencyWithdrawn
       abis:
         - name: Staking
           file: ./abis/Staking.json
@@ -41,7 +41,6 @@ dataSources:
           handler: handleRewardsClaimed
         - event: Staked(indexed address,uint256,uint256,uint256,uint256)
           handler: handleStaked
-       
        
        
         - event: Withdrawn(indexed address,uint256,uint256,uint256,uint256,uint256)

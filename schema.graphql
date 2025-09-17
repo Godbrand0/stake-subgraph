@@ -1,4 +1,4 @@
-type EmergencyWithdrawn @entity(immutable: true) {
+type EmergencyWithdrawn @entity(immutable: false) {
   id: Bytes!
   user: Bytes! # address
   amount: BigInt! # uint256
@@ -27,7 +27,7 @@ type RewardRateUpdated @entity(immutable: false) {
   transactionHash: Bytes!
 }
 
-type RewardsClaimed @entity(immutable: true) {
+type RewardsClaimed @entity(immutable: false) {
   id: Bytes!
   user: Bytes! # address
   amount: BigInt! # uint256
@@ -77,7 +77,7 @@ type StakingInitialized @entity(immutable: true) {
 
 
 
-type Withdrawn @entity(immutable: true) {
+type Withdrawn @entity(immutable: false) {
   id: Bytes!
   user: Bytes! # address
   amount: BigInt! # uint256

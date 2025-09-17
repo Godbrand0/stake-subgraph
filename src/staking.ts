@@ -6,7 +6,7 @@ import {
   RewardsClaimed as RewardsClaimedEvent,
   Staked as StakedEvent,
 
-  TokenRecovered as TokenRecoveredEvent,
+
  
   Withdrawn as WithdrawnEvent
 } from "../generated/Staking/Staking"
@@ -129,9 +129,9 @@ export function handleUserCreated (userAddress: Bytes, timestamp: BigInt): void 
     user = new UserCreated(userID)
     user.createdTimestamp = timestamp
     user.save()
-    handleTotalUsers()
   }
   
+    handleTotalUsers()
   
 }
 
@@ -155,11 +155,6 @@ if (stats == null) {
 stats.totalStaked=stats.totalStaked.plus(amount)
 stats.save()
 }
-
-
-
-
-
 
 
 export function handleWithdrawn(event: WithdrawnEvent): void {
